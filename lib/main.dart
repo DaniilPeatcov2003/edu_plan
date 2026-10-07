@@ -16,7 +16,12 @@ class EduPlanApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: const Color(0xFF1565C0),
+        ),
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       home: const HomeScreen(),
