@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import '../widgets/task_card.dart';
+import 'task_form_screen.dart';
 
 class TasksScreen extends StatelessWidget {
   const TasksScreen({super.key});
@@ -48,9 +49,7 @@ class TasksScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const Divider(height: 1),
-
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
@@ -67,6 +66,18 @@ class TasksScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TaskFormScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Создать задание'),
       ),
     );
   }
