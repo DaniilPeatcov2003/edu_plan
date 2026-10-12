@@ -1,39 +1,26 @@
+
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import 'schedule_screen.dart';
-import 'courses_screen.dart';
-import 'tasks_screen.dart';
-import 'profile_screen.dart';
+import 'package:go_router/go_router.dart';
 
-class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+class MainNavigationScreen extends StatelessWidget {
+  const MainNavigationScreen({
+    super.key,
+    required this.navigationShell,
+  });
 
-  @override
-  State<MainNavigationScreen> createState() =>
-      _MainNavigationScreenState();
-}
-
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    ScheduleScreen(),
-    CoursesScreen(),
-    TasksScreen(),
-    ProfileScreen(),
-  ];
+  final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
         },
         destinations: const [
           NavigationDestination(

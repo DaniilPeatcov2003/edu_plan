@@ -1,4 +1,5 @@
 class Course {
+  final String id;
   final String name;
   final String teacher;
   final String day;
@@ -6,6 +7,7 @@ class Course {
   final String room;
 
   const Course({
+    required this.id,
     required this.name,
     required this.teacher,
     required this.day,
@@ -32,6 +34,7 @@ class Task {
 
 const List<Course> mockCourses = [
   Course(
+    id: '1',
     name: 'Программирование мобильных приложений',
     teacher: 'Ionel Antohi',
     day: 'Понедельник',
@@ -39,6 +42,7 @@ const List<Course> mockCourses = [
     room: '204',
   ),
   Course(
+    id: '2',
     name: 'Компьютерные сети',
     teacher: 'Andrei Popescu',
     day: 'Вторник',
@@ -46,6 +50,7 @@ const List<Course> mockCourses = [
     room: '305',
   ),
   Course(
+    id: '3',
     name: 'Базы данных',
     teacher: 'Maria Rusu',
     day: 'Среда',
@@ -53,6 +58,7 @@ const List<Course> mockCourses = [
     room: '201',
   ),
   Course(
+    id: '4',
     name: 'Веб-программирование',
     teacher: 'Victor Munteanu',
     day: 'Среда',
@@ -60,6 +66,7 @@ const List<Course> mockCourses = [
     room: '307',
   ),
   Course(
+    id: '5',
     name: 'Информационные системы',
     teacher: 'Elena Ceban',
     day: 'Четверг',
@@ -67,6 +74,7 @@ const List<Course> mockCourses = [
     room: '210',
   ),
   Course(
+    id: '6',
     name: 'Разработка программного обеспечения',
     teacher: 'Ion Popa',
     day: 'Четверг',
@@ -74,6 +82,7 @@ const List<Course> mockCourses = [
     room: '204',
   ),
   Course(
+    id: '7',
     name: 'Анализ и проектирование систем',
     teacher: 'Ana Ciobanu',
     day: 'Пятница',
@@ -81,6 +90,7 @@ const List<Course> mockCourses = [
     room: '302',
   ),
   Course(
+    id: '8',
     name: 'Управление IT-проектами',
     teacher: 'Daniel Cojocaru',
     day: 'Пятница',

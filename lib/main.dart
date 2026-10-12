@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'router.dart';
 
 void main() {
   runApp(const EduPlanApp());
@@ -10,7 +10,7 @@ class EduPlanApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'EduPlan',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -24,7 +24,7 @@ class EduPlanApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(),
+      routerConfig: appRouter,
     );
   }
 }
