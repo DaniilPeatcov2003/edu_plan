@@ -1,17 +1,36 @@
+
 import 'package:flutter/material.dart';
+
 import '../data/mock_data.dart';
 
 class CourseDetailsScreen extends StatelessWidget {
   const CourseDetailsScreen({
     super.key,
-    required this.course,
+    required this.id,
   });
 
-  final Course course;
+  final String id;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    final matchingCourses = mockCourses.where(
+      (course) => course.id == id,
+    );
+
+    if (matchingCourses.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Информация о курсе'),
+        ),
+        body: const Center(
+          child: Text('Курс не найден'),
+        ),
+      );
+    }
+
+    final course = matchingCourses.first;
 
     return Scaffold(
       appBar: AppBar(
@@ -51,9 +70,7 @@ class CourseDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
             Card(
               child: Column(
                 children: [
@@ -83,9 +100,7 @@ class CourseDetailsScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -112,3 +127,4 @@ class CourseDetailsScreen extends StatelessWidget {
     );
   }
 }
+

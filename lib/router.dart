@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'data/mock_data.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/home_screen.dart';
@@ -56,26 +54,13 @@ final GoRouter appRouter = GoRouter(
             ),
 
             // Детали курса открываются по его ID.
+            
             GoRoute(
               path: '/courses/:id',
               builder: (context, state) {
-                final id = state.pathParameters['id'];
+                final id = state.pathParameters['id']!;
 
-                final course = mockCourses.where(
-                  (course) => course.id == id,
-                );
-
-                if (course.isEmpty) {
-                  return const Scaffold(
-                    body: Center(
-                      child: Text('Курс не найден'),
-                    ),
-                  );
-                }
-
-                return CourseDetailsScreen(
-                  course: course.first,
-                );
+                return CourseDetailsScreen(id: id);
               },
             ),
           ],
