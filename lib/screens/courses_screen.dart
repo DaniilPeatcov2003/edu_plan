@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import '../widgets/course_card.dart';
+import 'package:go_router/go_router.dart';
 
 class CoursesScreen extends StatelessWidget {
   const CoursesScreen({super.key});
@@ -86,6 +87,9 @@ class CoursesScreen extends StatelessWidget {
 
                 return CourseCard(
                   course: course,
+                  onTap: () {
+                    context.push('/courses/${course.id}');
+                  },
                 );
               },
             ),

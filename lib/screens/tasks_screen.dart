@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import '../widgets/task_card.dart';
-import 'task_form_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class TasksScreen extends StatelessWidget {
   const TasksScreen({super.key});
@@ -69,12 +69,7 @@ class TasksScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TaskFormScreen(),
-            ),
-          );
+          context.push('/tasks/new');
         },
         icon: const Icon(Icons.add),
         label: const Text('Создать задание'),
