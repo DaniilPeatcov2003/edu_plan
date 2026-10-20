@@ -1,7 +1,38 @@
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    debugPrint('Кнопка выхода нажата');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: const Text('Выход из аккаунта'),
+          content: const Text(
+            'Вы действительно хотите выйти?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              child: const Text('Выйти'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (ok == true && context.mounted) {
+      context.go('/login');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           OutlinedButton.icon(
-            onPressed: () {},
+            onPressed: () => _logout(context),
             icon: const Icon(Icons.logout),
             label: const Text('Выйти из аккаунта'),
           ),
