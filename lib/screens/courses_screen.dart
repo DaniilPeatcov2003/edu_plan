@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import '../data/mock_courses.dart';
 import '../widgets/course_card.dart';
 import 'package:go_router/go_router.dart';
 

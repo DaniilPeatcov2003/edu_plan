@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-import '../data/mock_data.dart';
+import '../data/mock_courses.dart';
+import '../models/task_model.dart';
+import '../models/task.dart';
 
 class TaskFormScreen extends StatefulWidget {
-  const TaskFormScreen({super.key});
+  const TaskFormScreen({
+    super.key,
+    this.taskId,
+  });
+
+  final String? taskId;
 
   @override
   State<TaskFormScreen> createState() => _TaskFormScreenState();
@@ -18,6 +26,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
   String? _selectedCourse;
   String? _selectedPriority;
+
+  Task? _originalTask;
 
   @override
   void dispose() {
@@ -68,13 +78,43 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     return null;
   }
 
-  void _saveTask() {
+  
+  Future<void> _saveTask() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final original = _originalTask;
+
+    final task = Task(
+      id: original?.id ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      title: _titleController.text.trim(),
+      course: _selectedCourse!,
+      deadline: _deadlineController.text.trim(),
+      status: original?.status ?? 'Не начато',
+      priority: _selectedPriority!,
+    );
+
+    final model = context.read<TaskModel>();
+
+    final error = original == null
+        ? await model.addTask(task)
+        : await model.updateTask(original, task);
+
+    if (!mounted) return;
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Задание "${_titleController.text.trim()}" проверено',
+          original == null
+              ? 'Задание "${task.title}" добавлено'
+              : 'Задание "${task.title}" обновлено',
         ),
       ),
     );
@@ -82,11 +122,95 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     context.pop();
   }
 
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (widget.taskId == null || _originalTask != null) {
+      return;
+    }
+
+    final model = context.read<TaskModel>();
+
+    // Ждём окончания загрузки списка.
+    if (model.isLoading || model.errorMessage != null) {
+      return;
+    }
+
+    for (final task in model.tasks) {
+      if (task.id == widget.taskId) {
+        _originalTask = task;
+
+        _titleController.text = task.title;
+        _deadlineController.text = task.deadline;
+        _selectedCourse = task.course;
+        _selectedPriority = task.priority;
+
+        break;
+      }
+    }
+  }
+
+  
   @override
   Widget build(BuildContext context) {
+    // Следим за состоянием заданий.
+    final model = context.watch<TaskModel>();
+
+    // 1. Показываем индикатор загрузки при редактировании.
+    if (widget.taskId != null && model.isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // 2. Если загрузка завершилась ошибкой, предлагаем повторить.
+    if (widget.taskId != null && model.errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Редактирование задания'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(model.errorMessage!),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () {
+                  context.read<TaskModel>().load();
+                },
+                child: const Text('Повторить'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 3. Если задание не найдено, показываем сообщение.
+    if (widget.taskId != null && _originalTask == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Редактирование задания'),
+        ),
+        body: const Center(
+          child: Text('Задание не найдено'),
+        ),
+      );
+    }
+
+    // 4. Основная форма создания или редактирования задания.
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Новое задание'),
+        title: Text(
+          widget.taskId == null
+              ? 'Новое задание'
+              : 'Редактирование задания',
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -95,7 +219,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Название задания
+              // Название задания.
               TextFormField(
                 controller: _titleController,
                 textCapitalization: TextCapitalization.sentences,
@@ -121,13 +245,14 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
               const SizedBox(height: 16),
 
-              // Выбор курса с валидацией
+              // Выбор курса с валидацией.
               FormField<String>(
                 initialValue: _selectedCourse,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Выберите курс';
                   }
+
                   return null;
                 },
                 builder: (field) {
@@ -163,7 +288,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
               const SizedBox(height: 16),
 
-              // Дедлайн
+              // Дедлайн.
               TextFormField(
                 controller: _deadlineController,
                 keyboardType: TextInputType.datetime,
@@ -185,13 +310,14 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
               const SizedBox(height: 16),
 
-              // Выбор приоритета с валидацией
+              // Выбор приоритета с валидацией.
               FormField<String>(
                 initialValue: _selectedPriority,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Выберите приоритет';
                   }
+
                   return null;
                 },
                 builder: (field) {
@@ -233,16 +359,20 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
               const SizedBox(height: 24),
 
-              // Сохранение
+              // Сохранение задания.
               FilledButton.icon(
                 onPressed: _saveTask,
                 icon: const Icon(Icons.save_outlined),
-                label: const Text('Сохранить задание'),
+                label: Text(
+                  widget.taskId == null
+                      ? 'Создать задание'
+                      : 'Сохранить изменения',
+                ),
               ),
 
               const SizedBox(height: 8),
 
-              // Отмена
+              // Отмена.
               OutlinedButton(
                 onPressed: () => context.pop(),
                 child: const Text('Отмена'),

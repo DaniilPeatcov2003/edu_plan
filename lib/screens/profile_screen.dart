@@ -1,12 +1,22 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+import '../data/mock_task_repository.dart';
+import '../models/task_model.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Локальное состояние переключателя.
+  bool _simulateNetworkError = false;
+
   Future<void> _logout(BuildContext context) async {
-    debugPrint('Кнопка выхода нажата');
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) {
@@ -32,6 +42,18 @@ class ProfileScreen extends StatelessWidget {
     if (ok == true && context.mounted) {
       context.go('/login');
     }
+  }
+
+  void _toggleNetworkError(bool value) {
+    setState(() {
+      _simulateNetworkError = value;
+    });
+
+    // Включаем или выключаем имитацию сбоя.
+    context.read<MockTaskRepository>().simulateError = value;
+
+    // Сразу проверяем результат на экране заданий.
+    context.read<TaskModel>().load();
   }
 
   @override
@@ -73,9 +95,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-
           Card(
             child: Column(
               children: [
@@ -99,9 +119,7 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
           Card(
             child: Column(
               children: [
@@ -122,12 +140,22 @@ class ProfileScreen extends StatelessWidget {
                     onChanged: (_) {},
                   ),
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.wifi_off_outlined),
+                  title: const Text('Симулировать сбой сети'),
+                  subtitle: const Text(
+                    'Проверка обработки ошибок загрузки',
+                  ),
+                  trailing: Switch(
+                    value: _simulateNetworkError,
+                    onChanged: _toggleNetworkError,
+                  ),
+                ),
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
           OutlinedButton.icon(
             onPressed: () => _logout(context),
             icon: const Icon(Icons.logout),

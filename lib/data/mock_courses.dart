@@ -1,0 +1,68 @@
+import '../models/course.dart';
+
+const List<Course> mockCourses = [
+  Course(
+    id: '1',
+    name: 'Программирование мобильных приложений',
+    teacher: 'Ionel Antohi',
+    day: 'Понедельник',
+    time: '10:00',
+    room: '204',
+  ),
+  Course(
+    id: '2',
+    name: 'Компьютерные сети',
+    teacher: 'Andrei Popescu',
+    day: 'Вторник',
+    time: '12:00',
+    room: '305',
+  ),
+  Course(
+    id: '3',
+    name: 'Базы данных',
+    teacher: 'Maria Rusu',
+    day: 'Среда',
+    time: '09:00',
+    room: '201',
+  ),
+  Course(
+    id: '4',
+    name: 'Веб-программирование',
+    teacher: 'Victor Munteanu',
+    day: 'Среда',
+    time: '14:00',
+    room: '307',
+  ),
+  Course(
+    id: '5',
+    name: 'Информационные системы',
+    teacher: 'Elena Ceban',
+    day: 'Четверг',
+    time: '10:00',
+    room: '210',
+  ),
+  Course(
+    id: '6',
+    name: 'Разработка программного обеспечения',
+    teacher: 'Ion Popa',
+    day: 'Четверг',
+    time: '13:00',
+    room: '204',
+  ),
+  Course(
+    id: '7',
+    name: 'Анализ и проектирование систем',
+    teacher: 'Ana Ciobanu',
+    day: 'Пятница',
+    time: '09:00',
+    room: '302',
+  ),
+  Course(
+    id: '8',
+    name: 'Управление IT-проектами',
+    teacher: 'Daniel Cojocaru',
+    day: 'Пятница',
+    time: '12:00',
+    room: '105',
+  ),
+];

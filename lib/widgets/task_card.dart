@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+
+import '../models/task.dart';
 
 class TaskCard extends StatelessWidget {
   const TaskCard({
     super.key,
     required this.task,
     this.onTap,
+    this.onEdit,
+    this.onDelete,
   });
 
   final Task task;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +35,39 @@ class TaskCard extends StatelessWidget {
           'Приоритет: ${task.priority}',
         ),
         isThreeLine: true,
-        trailing: Chip(
-          label: Text(task.status),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Chip(label: Text(task.status)),
+            PopupMenuButton<String>(
+              tooltip: 'Действия с заданием',
+              onSelected: (value) {
+                if (value == 'edit') {
+                  onEdit?.call();
+                } else if (value == 'delete') {
+                  onDelete?.call();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: Icon(Icons.edit_outlined),
+                    title: Text('Редактировать'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: Icon(Icons.delete_outline),
+                    title: Text('Удалить'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

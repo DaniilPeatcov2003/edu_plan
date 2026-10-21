@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import '../models/course.dart';
 
 class CourseCard extends StatelessWidget {
   const CourseCard({

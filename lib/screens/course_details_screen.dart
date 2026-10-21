@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 
-import '../data/mock_data.dart';
+import '../data/mock_courses.dart';
 
 class CourseDetailsScreen extends StatelessWidget {
   const CourseDetailsScreen({

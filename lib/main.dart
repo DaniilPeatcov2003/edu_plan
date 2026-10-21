@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'data/mock_task_repository.dart';
+import 'models/task_model.dart';
 import 'router.dart';
 
 void main() {
-  runApp(const EduPlanApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        // Создаём репозиторий и предоставляем его приложению.
+        Provider<MockTaskRepository>(
+          create: (_) => MockTaskRepository(),
+        ),
+
+        // Передаём репозиторий модели и загружаем задания.
+        ChangeNotifierProvider<TaskModel>(
+          create: (context) => TaskModel(
+            repository: context.read<MockTaskRepository>(),
+          )..load(),
+        ),
+      ],
+      child: const EduPlanApp(),
+    ),
+  );
 }
 
 class EduPlanApp extends StatelessWidget {
@@ -28,3 +49,4 @@ class EduPlanApp extends StatelessWidget {
     );
   }
 }
+
