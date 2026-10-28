@@ -34,15 +34,22 @@ class MockTaskRepository implements TaskRepository {
       return const Err<Task>('Не удалось создать задание');
     }
 
-    _tasks.add(task);
-    return Ok<Task>(task);
+    // ID назначается репозиторием, а не экраном формы.
+    final createdTask = Task(
+      id: 'task-${DateTime.now().microsecondsSinceEpoch}',
+      title: task.title,
+      course: task.course,
+      deadline: task.deadline,
+      status: task.status,
+      priority: task.priority,
+    );
+
+    _tasks.add(createdTask);
+    return Ok<Task>(createdTask);
   }
 
   @override
-  Future<Result<Task>> update(
-    Task oldTask,
-    Task updatedTask,
-  ) async {
+  Future<Result<Task>> update(Task oldTask, Task updatedTask) async {
     await Future.delayed(_delay);
 
     if (simulateError) {
@@ -92,5 +99,5 @@ class MockTaskRepository implements TaskRepository {
     }
 
     return const Err<Task>('Задание не найдено');
-  } 
+  }
 }

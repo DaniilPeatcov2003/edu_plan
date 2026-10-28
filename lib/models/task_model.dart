@@ -13,6 +13,17 @@ class TaskModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Находим задание по ID в уже загруженном списке.
+  Task? byId(String id) {
+    for (final task in _tasks) {
+      if (task.id == id) {
+        return task;
+      }
+    }
+
+    return null;
+  }
+
   // Экран может читать список, но не изменять его напрямую.
   List<Task> get tasks => List.unmodifiable(_tasks);
 

@@ -8,10 +8,7 @@ import '../models/task_model.dart';
 import '../models/task.dart';
 
 class TaskFormScreen extends StatefulWidget {
-  const TaskFormScreen({
-    super.key,
-    this.taskId,
-  });
+  const TaskFormScreen({super.key, this.taskId});
 
   final String? taskId;
 
@@ -48,9 +45,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
     final date = DateTime(year, month, day);
 
-    if (date.day != day ||
-        date.month != month ||
-        date.year != year) {
+    if (date.day != day || date.month != month || date.year != year) {
       return null;
     }
 
@@ -78,15 +73,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     return null;
   }
 
-  
   Future<void> _saveTask() async {
     if (!_formKey.currentState!.validate()) return;
 
     final original = _originalTask;
 
     final task = Task(
-      id: original?.id ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+      id: original?.id ?? '',
       title: _titleController.text.trim(),
       course: _selectedCourse!,
       deadline: _deadlineController.text.trim(),
@@ -103,9 +96,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     if (!mounted) return;
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 
@@ -122,7 +114,6 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     context.pop();
   }
 
-  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -138,21 +129,17 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       return;
     }
 
-    for (final task in model.tasks) {
-      if (task.id == widget.taskId) {
-        _originalTask = task;
+    final task = model.byId(widget.taskId!);
+    if (task != null) {
+      _originalTask = task;
 
-        _titleController.text = task.title;
-        _deadlineController.text = task.deadline;
-        _selectedCourse = task.course;
-        _selectedPriority = task.priority;
-
-        break;
-      }
+      _titleController.text = task.title;
+      _deadlineController.text = task.deadline;
+      _selectedCourse = task.course;
+      _selectedPriority = task.priority;
     }
   }
 
-  
   @override
   Widget build(BuildContext context) {
     // Следим за состоянием заданий.
@@ -160,19 +147,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
     // 1. Показываем индикатор загрузки при редактировании.
     if (widget.taskId != null && model.isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // 2. Если загрузка завершилась ошибкой, предлагаем повторить.
     if (widget.taskId != null && model.errorMessage != null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Редактирование задания'),
-        ),
+        appBar: AppBar(title: const Text('Редактирование задания')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -194,12 +175,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     // 3. Если задание не найдено, показываем сообщение.
     if (widget.taskId != null && _originalTask == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Редактирование задания'),
-        ),
-        body: const Center(
-          child: Text('Задание не найдено'),
-        ),
+        appBar: AppBar(title: const Text('Редактирование задания')),
+        body: const Center(child: Text('Задание не найдено')),
       );
     }
 
@@ -207,9 +184,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.taskId == null
-              ? 'Новое задание'
-              : 'Редактирование задания',
+          widget.taskId == null ? 'Новое задание' : 'Редактирование задания',
         ),
       ),
       body: SingleChildScrollView(
@@ -294,9 +269,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 keyboardType: TextInputType.datetime,
                 textInputAction: TextInputAction.next,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[0-9.]'),
-                  ),
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   LengthLimitingTextInputFormatter(10),
                 ],
                 decoration: const InputDecoration(
@@ -339,18 +312,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         });
                       },
                       dropdownMenuEntries: const [
-                        DropdownMenuEntry(
-                          value: 'Низкий',
-                          label: 'Низкий',
-                        ),
-                        DropdownMenuEntry(
-                          value: 'Средний',
-                          label: 'Средний',
-                        ),
-                        DropdownMenuEntry(
-                          value: 'Высокий',
-                          label: 'Высокий',
-                        ),
+                        DropdownMenuEntry(value: 'Низкий', label: 'Низкий'),
+                        DropdownMenuEntry(value: 'Средний', label: 'Средний'),
+                        DropdownMenuEntry(value: 'Высокий', label: 'Высокий'),
                       ],
                     ),
                   );

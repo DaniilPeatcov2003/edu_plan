@@ -73,6 +73,14 @@ final GoRouter appRouter = GoRouter(
               path: '/tasks',
               builder: (context, state) => const TasksScreen(),
             ),
+
+            // Создание нового задания.
+            GoRoute(
+              path: '/tasks/new',
+              builder: (context, state) => const TaskFormScreen(),
+            ),
+
+            // Редактирование существующего задания по ID.
             GoRoute(
               path: '/tasks/:id/edit',
               builder: (context, state) {
