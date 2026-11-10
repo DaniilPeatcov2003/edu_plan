@@ -1,9 +1,14 @@
+
 import '../models/task.dart';
 import 'result.dart';
 
 abstract interface class TaskRepository {
-  // Получить список всех заданий.
-  Future<Result<List<Task>>> fetchAll();
+  // Получить страницу заданий с возможностью поиска.
+  Future<Result<List<Task>>> fetchAll({
+    int page = 1,
+    int limit = 20,
+    String search = '',
+  });
 
   // Получить задание по ID.
   Future<Result<Task>> fetchById(String id);

@@ -10,10 +10,16 @@ class TaskModel extends ChangeNotifier {
   final TaskRepository repository;
   final List<Task> _tasks = [];
 
-  bool _isLoading = false;
-  String? _errorMessage;
+  static const int pageSize = 20;
 
-  // Находим задание по ID в уже загруженном списке.
+  bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+
+  String? _errorMessage;
+  String _search = '';
+  int _currentPage = 0;
+
   Task? byId(String id) {
     for (final task in _tasks) {
       if (task.id == id) {
@@ -24,25 +30,39 @@ class TaskModel extends ChangeNotifier {
     return null;
   }
 
-  // Экран может читать список, но не изменять его напрямую.
   List<Task> get tasks => List.unmodifiable(_tasks);
 
   bool get isLoading => _isLoading;
 
+  bool get isLoadingMore => _isLoadingMore;
+
+  bool get hasMore => _hasMore;
+
   String? get errorMessage => _errorMessage;
 
-  // Загружаем задания из репозитория.
-  Future<void> load() async {
+  // Загрузка первой страницы.
+  Future<void> load({String? search}) async {
+    if (_isLoading) return;
+
     _isLoading = true;
     _errorMessage = null;
+    _search = search ?? _search;
+    _currentPage = 0;
+    _hasMore = true;
+
+    _tasks.clear();
     notifyListeners();
 
-    final result = await repository.fetchAll();
+    final result = await repository.fetchAll(
+      page: 1,
+      limit: pageSize,
+      search: _search,
+    );
 
     if (result is Ok<List<Task>>) {
-      _tasks
-        ..clear()
-        ..addAll(result.value);
+      _tasks.addAll(result.value);
+      _currentPage = 1;
+      _hasMore = result.value.length == pageSize;
     } else if (result is Err<List<Task>>) {
       _errorMessage = result.message;
     }
@@ -51,20 +71,45 @@ class TaskModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Создаём задание.
-  Future<String?> addTask(Task task) async {
+  // Загрузка следующей страницы.
+  Future<void> loadMore() async {
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
+
+    _isLoadingMore = true;
+    notifyListeners();
+
+    final nextPage = _currentPage + 1;
+
+    final result = await repository.fetchAll(
+      page: nextPage,
+      limit: pageSize,
+      search: _search,
+    );
+
+    if (result is Ok<List<Task>>) {
+      _tasks.addAll(result.value);
+      _currentPage = nextPage;
+      _hasMore = result.value.length == pageSize;
+    } else if (result is Err<List<Task>>) {
+      _errorMessage = result.message;
+    }
+
+    _isLoadingMore = false;
+    notifyListeners();
+  }
+
+  // Создание задания.
+  Future<Result<Task>> addTask(Task task) async {
     final result = await repository.create(task);
 
     if (result is Ok<Task>) {
-      _tasks.add(result.value);
-      notifyListeners();
-      return null;
+      await load(search: _search);
     }
 
-    return (result as Err<Task>).message;
+    return result;
   }
 
-  // Изменяем задание.
+  // Изменение задания.
   Future<String?> updateTask(
     Task oldTask,
     Task updatedTask,
@@ -72,7 +117,9 @@ class TaskModel extends ChangeNotifier {
     final result = await repository.update(oldTask, updatedTask);
 
     if (result is Ok<Task>) {
-      final index = _tasks.indexOf(oldTask);
+      final index = _tasks.indexWhere(
+        (item) => item.id == oldTask.id,
+      );
 
       if (index != -1) {
         _tasks[index] = result.value;
@@ -85,12 +132,12 @@ class TaskModel extends ChangeNotifier {
     return (result as Err<Task>).message;
   }
 
-  // Удаляем задание.
+  // Удаление задания.
   Future<String?> deleteTask(Task task) async {
     final result = await repository.delete(task);
 
     if (result is Ok<void>) {
-      _tasks.remove(task);
+      _tasks.removeWhere((item) => item.id == task.id);
       notifyListeners();
       return null;
     }

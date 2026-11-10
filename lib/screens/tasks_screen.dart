@@ -1,3 +1,6 @@
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -5,12 +8,69 @@ import 'package:provider/provider.dart';
 import '../models/task_model.dart';
 import '../widgets/task_card.dart';
 
-class TasksScreen extends StatelessWidget {
+class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
   @override
+  State<TasksScreen> createState() => _TasksScreenState();
+}
+
+class _TasksScreenState extends State<TasksScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  Timer? _searchDebounce;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(_onScroll);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<TaskModel>().load();
+    });
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<TaskModel>().loadMore();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 400),
+      () {
+        if (!mounted) return;
+        context.read<TaskModel>().load(search: value);
+      },
+    );
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    _searchController.clear();
+    context.read<TaskModel>().load(search: '');
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Подписываем экран на изменения модели.
     final model = context.watch<TaskModel>();
     final tasks = model.tasks;
 
@@ -18,13 +78,11 @@ class TasksScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Задания'),
       ),
-
-      // Отображаем состояние модели.
       body: model.isLoading
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : model.errorMessage != null
+          : model.errorMessage != null && tasks.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -43,7 +101,9 @@ class TasksScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         FilledButton.icon(
                           onPressed: () {
-                            context.read<TaskModel>().load();
+                            model.load(
+                              search: _searchController.text,
+                            );
                           },
                           icon: const Icon(Icons.refresh),
                           label: const Text('Повторить'),
@@ -54,6 +114,23 @@ class TasksScreen extends StatelessWidget {
                 )
               : Column(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Поиск задания',
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            onPressed: _clearSearch,
+                            icon: const Icon(Icons.clear),
+                          ),
+                        ),
+                        onChanged: _onSearchChanged,
+                      ),
+                    ),
+
                     SizedBox(
                       height: 56,
                       child: ListView(
@@ -89,32 +166,77 @@ class TasksScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+
                     const Divider(height: 1),
+
                     Expanded(
                       child: tasks.isEmpty
                           ? const Center(
                               child: Text('Заданий пока нет'),
                             )
                           : ListView.separated(
+                              controller: _scrollController,
                               padding: const EdgeInsets.all(16),
-                              itemCount: tasks.length,
+                              itemCount: tasks.length +
+                                  (model.isLoadingMore ||
+                                          model.errorMessage != null
+                                      ? 1
+                                      : 0),
                               separatorBuilder: (context, index) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (context, index) {
+                                if (index >= tasks.length) {
+                                  if (model.isLoadingMore) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  }
+
+                                  return Center(
+                                    child: TextButton.icon(
+                                      onPressed: () => model.loadMore(),
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Повторить загрузку'),
+                                    ),
+                                  );
+                                }
+
                                 final task = tasks[index];
+
                                 return TaskCard(
                                   task: task,
+                                  onStatusChanged: (newStatus) async {
+                                    final updatedTask = task.copyWith(
+                                      status: newStatus,
+                                    );
 
-                                  // Открываем форму редактирования по ID задания.
+                                    final error = await context.read<TaskModel>().updateTask(
+                                      task,
+                                      updatedTask,
+                                    );
+
+                                    if (!context.mounted) return;
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          error ?? 'Статус задания изменён',
+                                        ),
+                                      ),
+                                    );
+                                  },
                                   onEdit: () {
                                     context.push('/tasks/${task.id}/edit');
                                   },
-
-                                  // Удаляем задание только после подтверждения.
                                   onDelete: () async {
-                                    final confirmed = await showDialog<bool>(
+                                    final confirmed =
+                                        await showDialog<bool>(
                                       context: context,
-                                      builder: (dialogContext) => AlertDialog(
+                                      builder: (dialogContext) =>
+                                          AlertDialog(
                                         title: const Text('Удалить задание?'),
                                         content: Text(
                                           'Задание «${task.title}» будет удалено.',
@@ -122,13 +244,19 @@ class TasksScreen extends StatelessWidget {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.pop(dialogContext, false);
+                                              Navigator.pop(
+                                                dialogContext,
+                                                false,
+                                              );
                                             },
                                             child: const Text('Отмена'),
                                           ),
                                           FilledButton(
                                             onPressed: () {
-                                              Navigator.pop(dialogContext, true);
+                                              Navigator.pop(
+                                                dialogContext,
+                                                true,
+                                              );
                                             },
                                             child: const Text('Удалить'),
                                           ),
@@ -136,7 +264,10 @@ class TasksScreen extends StatelessWidget {
                                       ),
                                     );
 
-                                    if (confirmed != true || !context.mounted) return;
+                                    if (confirmed != true ||
+                                        !context.mounted) {
+                                      return;
+                                    }
 
                                     final error = await context
                                         .read<TaskModel>()
@@ -144,9 +275,12 @@ class TasksScreen extends StatelessWidget {
 
                                     if (!context.mounted) return;
 
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
                                       SnackBar(
-                                        content: Text(error ?? 'Задание удалено'),
+                                        content: Text(
+                                          error ?? 'Задание удалено',
+                                        ),
                                       ),
                                     );
                                   },
@@ -157,7 +291,6 @@ class TasksScreen extends StatelessWidget {
                   ],
                 ),
 
-      // Кнопка создания доступна, когда данные загружены.
       floatingActionButton:
           model.isLoading || model.errorMessage != null
               ? null

@@ -1,6 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -21,11 +24,42 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  // Авторизация через backend.
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
-    context.go('/home');
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await AuthService().login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      context.go('/home');
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -67,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Поле e-mail
+                  // Поле e-mail.
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -93,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Поле пароля
+                  // Поле пароля.
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
@@ -119,22 +153,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Кнопка входа.
                   FilledButton(
-                    onPressed: _login,
-                    child: const Text('Войти'),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('Войти'),
                   ),
                   const SizedBox(height: 8),
 
                   OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Регистрация пока не реализована',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: _isLoading ? null : () => context.push('/register'),
                     child: const Text('Создать аккаунт'),
                   ),
                 ],

@@ -9,98 +9,115 @@ import 'screens/course_details_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/task_form_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/course_form_screen.dart';
 
-final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
-  routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+GoRouter createAppRouter({required bool isAuthenticated}) {
+  return GoRouter(
+    initialLocation: isAuthenticated ? '/home' : '/login',
+    routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
 
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) {
-        return MainNavigationScreen(
-          navigationShell: navigationShell,
-        );
-      },
-      branches: [
-        // Главная
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/home',
-              builder: (context, state) => const HomeScreen(),
-            ),
-          ],
-        ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainNavigationScreen(
+            navigationShell: navigationShell,
+          );
+        },
+        branches: [
+          // Главная
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
 
-        // Расписание
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/schedule',
-              builder: (context, state) => const ScheduleScreen(),
-            ),
-          ],
-        ),
+          // Расписание
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/schedule',
+                builder: (context, state) => const ScheduleScreen(),
+              ),
+            ],
+          ),
 
-        // Курсы
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/courses',
-              builder: (context, state) => const CoursesScreen(),
-            ),
+          // Курсы
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/courses',
+                builder: (context, state) => const CoursesScreen(),
+              ),
 
-            // Детали курса открываются по его ID.
-            
-            GoRoute(
-              path: '/courses/:id',
-              builder: (context, state) {
-                final id = state.pathParameters['id']!;
+              // Добавление курса
+              GoRoute(
+                path: '/courses/new',
+                builder: (context, state) => const CourseFormScreen(),
+              ),
 
-                return CourseDetailsScreen(id: id);
-              },
-            ),
-          ],
-        ),
+              // Редактирование курса
+              GoRoute(
+                path: '/courses/:id/edit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return CourseFormScreen(courseId: id);
+                },
+              ),
 
-        // Задания
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/tasks',
-              builder: (context, state) => const TasksScreen(),
-            ),
+              // Информация о курсе
+              GoRoute(
+                path: '/courses/:id',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return CourseDetailsScreen(id: id);
+                },
+              ),
+            ],
+          ),
 
-            // Создание нового задания.
-            GoRoute(
-              path: '/tasks/new',
-              builder: (context, state) => const TaskFormScreen(),
-            ),
+          // Задания
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/tasks',
+                builder: (context, state) => const TasksScreen(),
+              ),
+              GoRoute(
+                path: '/tasks/new',
+                builder: (context, state) => const TaskFormScreen(),
+              ),
+              GoRoute(
+                path: '/tasks/:id/edit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return TaskFormScreen(taskId: id);
+                },
+              ),
+            ],
+          ),
 
-            // Редактирование существующего задания по ID.
-            GoRoute(
-              path: '/tasks/:id/edit',
-              builder: (context, state) {
-                final id = state.pathParameters['id']!;
-                return TaskFormScreen(taskId: id);
-              },
-            ),
-          ],
-        ),
-
-        // Профиль
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ],
-);
+          // Профиль
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+}

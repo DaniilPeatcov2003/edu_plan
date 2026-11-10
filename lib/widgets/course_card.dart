@@ -21,19 +21,30 @@ class CourseCard extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: colorScheme.primaryContainer,
           child: Text(
-            course.name[0],
+            course.name.isNotEmpty ? course.name[0] : '?',
             style: TextStyle(
               color: colorScheme.onPrimaryContainer,
             ),
           ),
         ),
         title: Text(course.name),
-        subtitle: Text(
-          '${course.teacher}\n'
-          '${course.day} • ${course.time} • '
-          'Аудитория ${course.room}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(course.teacher),
+            const SizedBox(height: 8),
+            ...course.sessions.map(
+              (session) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${session.day} • ${session.time} • '
+                  'Аудитория ${session.room}',
+                ),
+              ),
+            ),
+          ],
         ),
-        isThreeLine: true,
+        isThreeLine: course.sessions.length == 1,
         trailing: const Icon(Icons.chevron_right),
       ),
     );
