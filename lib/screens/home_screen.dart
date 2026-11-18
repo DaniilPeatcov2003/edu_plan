@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../models/course.dart';
@@ -19,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    // Загружаем данные после открытия главной страницы.
     context.read<CourseModel>().load();
     context.read<TaskModel>().load();
   }
@@ -45,8 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final course in courses) {
       for (final session in course.sessions) {
         final weekday = weekdays[session.day.trim()];
-
-        // Поддерживаем форматы 10.00 и 10:00.
         final timeParts = session.time.trim().split(RegExp(r'[:.]'));
 
         if (weekday == null || timeParts.length != 2) {
@@ -75,8 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
           minute,
         );
 
-        // Если занятие на сегодня уже началось или прошло,
-        // ищем его на следующей неделе.
         if (!sessionDate.isAfter(now)) {
           sessionDate = sessionDate.add(const Duration(days: 7));
         }
@@ -98,6 +95,71 @@ class _HomeScreenState extends State<HomeScreen> {
       name: nearestCourse.name,
       teacher: nearestCourse.teacher,
       sessions: [nearestSession],
+    );
+  }
+
+  // Изменение статуса задания.
+  Future<void> _changeTaskStatus(
+    dynamic task,
+    String newStatus,
+  ) async {
+    final updatedTask = task.copyWith(status: newStatus);
+
+    final error = await context.read<TaskModel>().updateTask(
+          task,
+          updatedTask,
+        );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Статус задания изменён'),
+      ),
+    );
+  }
+
+  // Редактирование задания.
+  void _editTask(dynamic task) {
+    context.push('/tasks/${task.id}/edit');
+  }
+
+  // Удаление задания.
+  Future<void> _deleteTask(dynamic task) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Удалить задание?'),
+        content: Text(
+          'Задание «${task.title}» будет удалено.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final error = await context.read<TaskModel>().deleteTask(task);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Задание удалено'),
+      ),
     );
   }
 
@@ -153,7 +215,12 @@ class _HomeScreenState extends State<HomeScreen> {
           else if (nextCourse == null)
             const Text('Занятий пока нет.')
           else
-            CourseCard(course: nextCourse),
+            CourseCard(
+              course: nextCourse,
+              onTap: () {
+                context.push('/courses/${nextCourse.id}');
+              },
+            ),
 
           const SizedBox(height: 24),
 
@@ -185,8 +252,19 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text('Заданий пока нет.')
           else
             ...taskModel.tasks.take(3).map(
-                  (task) => TaskCard(task: task),
-                ),
+              (task) => TaskCard(
+                task: task,
+                onStatusChanged: (newStatus) {
+                  _changeTaskStatus(task, newStatus);
+                },
+                onEdit: () {
+                  _editTask(task);
+                },
+                onDelete: () {
+                  _deleteTask(task);
+                },
+              ),
+            ),
         ],
       ),
     );
